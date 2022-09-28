@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useReducer, useCallback, useRef, useMemo } from 'react';
 import './App.css'
 
 import UserList from './UserList';
@@ -10,111 +10,127 @@ function countActiveUsers(users){
   return users.filter(user => user.active).length;
 }
 
+const initialState = {
+  inputs : {
+    userName : '',
+    email : ''
+  },
+
+  users : [
+    {
+      id: 1,
+      userName: 'velopert',
+      email: 'public.velopert@gmail.com',
+      active : true
+    },
+    {
+      id: 2,
+      userName: 'tester',
+      email: 'tester@example.com',
+      active : false
+    },
+    {
+      id: 3,
+      userName: 'liz',
+      email: 'liz@example.com',
+      active : false
+    }
+  ]
+}
+
+function reducer(state, action){
+
+  switch(action.type){
+    case 'CHANGE_INPUT':
+      return {
+        ...state,
+        inputs: {
+          ...state.inputs,
+          [action.name] : action.value
+        }
+      };
+    
+    case 'CREATE_USER':
+      return {
+        inputs : initialState.inputs,
+        users : state.users.concat(action.user)
+      }
+    
+    case 'TOGGLE_USER':
+      return {
+        ...state,
+        users : state.users.map(user => 
+          user.id === action.id ? {...user, active: !user.active} : user
+        )
+      }
+    
+    case 'REMOVE_USER':
+      return {
+        ...state,
+        users : state.users.filter(user => 
+          user.id !== action.id
+        )
+      }
+    
+    default:
+      return state;
+  }
+
+}
 
 function App() {
 
-  // const text = 'IZONE';
-
-  // const style = {
-  //   backgroundColor : 'black',
-  //   color : 'aqua',
-  //   fontSize : 24,
-  //   padding: '1rem'
-  // }
-
-  const [inputs, setInputs] = useState({
-    userName : '',
-    email : ''
-  });
-
-  const { userName, email } = inputs;
-  const onChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setInputs( inputs => ({
-      ...inputs,
-      [name] : value
-    }));
-  }, []);
-
-  const [ users, setUsers ] = useState([
-    {
-        id: 1,
-        userName: 'velopert',
-        email: 'public.velopert@gmail.com',
-        active : true
-      },
-      {
-        id: 2,
-        userName: 'tester',
-        email: 'tester@example.com',
-        active : false
-      },
-      {
-        id: 3,
-        userName: 'liz',
-        email: 'liz@example.com',
-        active : false
-      }
-  ]);
-
+  const [ state, dispatch ] = useReducer(reducer, initialState);
+  const { users } = state;
+  const { userName, email } = state.inputs;
   const nextId = useRef(4);
 
-  const onCreate = useCallback(() => {
 
-    const user = {
-      id : nextId.current,
-      userName,
-      email
-    };
+  const onChange = useCallback( e => {
+    const { name, value } = e.target;
+    
+    dispatch({
+      type : 'CHANGE_INPUT',
+      name,
+      value
+    });
 
-    // setUsers([...users, user]);
-    setUsers(users => users.concat(user));
+  }, []);
 
-    setInputs({
-      userName : '',
-      email : ''
+  const onCreate = useCallback(()=>{
+    dispatch({
+      type : 'CREATE_USER',
+      user : {
+        id : nextId.current,
+        userName,
+        email
+      }
     });
 
     nextId.current += 1;
   }, [userName, email]);
 
-  const onRemove = useCallback((id) =>{
-    setUsers( users => 
-      users.filter(user => user.id !== id)
-    )
+  const onToggle = useCallback( id =>{
+    dispatch({
+      type : 'TOGGLE_USER',
+      id
+    });
   }, []);
 
-  const onToggle = useCallback((id) =>{
-    setUsers( users => 
-      users.map(user => user.id === id ? {...user, active : !user.active} : user)
-    )
+  const onRemove = useCallback( id => {
+    dispatch({
+      type : 'REMOVE_USER',
+      id
+    });
   }, []);
 
-  const count = useMemo(()=> countActiveUsers(users), [users]);
+  const count = useMemo(()=>countActiveUsers(users), [users]);
 
   return (
     <>
-      {/* <Hello name="react" color="red" isSpecial></Hello>
-      <Hello color="pink"></Hello>
-      <div style={style}>{text}</div>
-      <div className="gray-box"></div>
-
-
-      <Counter></Counter>
-
-      <br></br>
-      <InputSample></InputSample>
-
-      <br></br>
-      <br></br>
-      <br></br> */}
-      <CreateUser
-        userName={userName}
-        email={email}
-        onChange={onChange}
-        onCreate={onCreate}
-      ></CreateUser>
-      <UserList users={users} onRemove={onRemove} onToggle={onToggle}></UserList>
+    
+      <CreateUser userName={userName} email={email} onChange={onChange} onCreate={onCreate} />
+      <UserList users={users} onToggle={onToggle} onRemove={onRemove} />
       <div>활성사용자 수 : {count}</div>
     </>
   );
