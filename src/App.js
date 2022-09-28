@@ -62,61 +62,35 @@ function reducer(state, action){
 
 }
 
+export const UserDispatch = React.createContext(null);
+
 function App() {
 
-  const [{ userName, email }, onChange, reset] = useInputs({
-    userName : '',
-    email : ''
-  });
+  // const [{ userName, email }, onChange, reset] = useInputs({
+  //   userName : '',
+  //   email : ''
+  // });
 
   const [ state, dispatch ] = useReducer(reducer, initialState);
   const { users } = state;
-  const nextId = useRef(4);
+  
 
 
-  const onCreate = useCallback(()=>{
-    dispatch({
-      type : 'CREATE_USER',
-      user : {
-        id : nextId.current,
-        userName,
-        email
-      }
-    });
+  // const onCreate = useCallback(()=>{
+    
+  // }, [userName, email, reset]);
 
-    reset();
-
-    nextId.current += 1;
-  }, [userName, email, reset]);
-
-  const onToggle = useCallback( id =>{
-    dispatch({
-      type : 'TOGGLE_USER',
-      id
-    });
-  }, []);
-
-  const onRemove = useCallback( id => {
-    dispatch({
-      type : 'REMOVE_USER',
-      id
-    });
-  }, []);
 
   const count = useMemo(()=>countActiveUsers(users), [users]);
 
   return (
-    <>
+    <UserDispatch.Provider value={dispatch}>
     
       <CreateUser 
-        userName={userName} 
-        email={email} 
-        onChange={onChange} 
-        onCreate={onCreate} 
       />
-      <UserList users={users} onToggle={onToggle} onRemove={onRemove} />
+      <UserList users={users}/>
       <div>활성사용자 수 : {count}</div>
-    </>
+    </ UserDispatch.Provider>
   );
 }
 
