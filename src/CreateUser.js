@@ -1,52 +1,50 @@
-import React, { useRef, useContext, useCallback } from "react";
+import React, { useRef, useContext } from 'react';
 
-import useInputs from "./Hook/useInputs";
-import { UserDispatch } from "./App";
+import useInputs from './Hook/useInputs';
+import { UserDispatch } from './App';
 
-function CreateUser({  }){
+function CreateUser() {
+  const [{ userName, email }, onChange, reset] = useInputs({
+    userName: '',
+    email: '',
+  });
 
-    const [{ userName, email }, onChange, reset] = useInputs({
-        userName : '',
-        email : ''
+  const nextId = useRef(4);
+  const dispatch = useContext(UserDispatch);
+
+  const onCreate = () => {
+    dispatch({
+      type: 'CREATE_USER',
+      user: {
+        id: nextId.current,
+        userName,
+        email,
+      },
     });
 
-    const nextId = useRef(4);
-    const dispatch = useContext(UserDispatch);
-    
-    const onCreate = () => {
-        dispatch({
-            type : 'CREATE_USER',
-            user : {
-              id : nextId.current,
-              userName,
-              email
-            }
-        });
-      
-        reset();
-    
-        nextId.current += 1;
-    }
+    reset();
 
-    return (
-        <div>
-            <input
-                name="userName"
-                placeholder="이름"
-                onChange={onChange}
-                value={userName}
-            ></input>
+    nextId.current += 1;
+  };
 
-            <input
-                name="email"
-                placeholder="이메일"
-                onChange={onChange}
-                value={email}
-            ></input>
-            <button onClick={onCreate}>등록</button>
-        </div>
-    );
+  return (
+    <div>
+      <input
+        name="userName"
+        placeholder="이름"
+        onChange={onChange}
+        value={userName}
+      ></input>
+
+      <input
+        name="email"
+        placeholder="이메일"
+        onChange={onChange}
+        value={email}
+      ></input>
+      <button onClick={onCreate}>등록</button>
+    </div>
+  );
 }
-
 
 export default React.memo(CreateUser);
