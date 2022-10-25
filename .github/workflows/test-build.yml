@@ -50,3 +50,5 @@ jobs:
           timeout: 40s
           script: |
             echo "SSH 접속 완료"
+            cd /home/javascript-p4-bmtown
+            docker-compose ps
